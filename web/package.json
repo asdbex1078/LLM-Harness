@@ -1,0 +1,21 @@
+{
+  "name": "knowrary-web",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Knowrary 结构视图前端（Vue 3 + X6）。构建产物 dist/ 入库，运行期零 Node。",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@antv/x6": "^2.18.1",
+    "@antv/x6-plugin-selection": "^2.2.2",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7"
+  }
+}

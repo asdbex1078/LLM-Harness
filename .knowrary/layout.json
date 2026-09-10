@@ -1,0 +1,848 @@
+{
+  "schema_version": 2,
+  "revision": 37,
+  "updated_at": "2026-09-10T14:06:14Z",
+  "viewport": {
+    "zoom": 1.75,
+    "cx": 794.0,
+    "cy": 550.0
+  },
+  "groups": {
+    "g-AI-Agent": {
+      "name": "AI-Agent",
+      "x": 0.0,
+      "y": 0.0,
+      "w": 1144.0,
+      "h": 396.0,
+      "parent": null,
+      "collapsed": false,
+      "pinned": null,
+      "color": "#eef2f8"
+    },
+    "g-AI-Agent--_stubs": {
+      "name": "_stubs",
+      "x": 712.0,
+      "y": 44.0,
+      "w": 408.0,
+      "h": 128.0,
+      "parent": "g-AI-Agent",
+      "collapsed": false,
+      "pinned": null,
+      "color": null
+    },
+    "g-计算机体系结构": {
+      "name": "计算机体系结构",
+      "x": 0.0,
+      "y": 480.0,
+      "w": 2520.0,
+      "h": 1104.0,
+      "parent": null,
+      "collapsed": false,
+      "pinned": null,
+      "color": "#eef2f8"
+    },
+    "g-计算机体系结构--01-理论基础": {
+      "name": "01-理论基础",
+      "x": 460.0,
+      "y": 500.0,
+      "w": 608.0,
+      "h": 328.0,
+      "parent": "g-计算机体系结构",
+      "collapsed": false,
+      "pinned": null,
+      "color": null
+    },
+    "g-计算机体系结构--02-计算机硬件": {
+      "name": "02-计算机硬件",
+      "x": 1000.0,
+      "y": 424.0,
+      "w": 1008.0,
+      "h": 528.0,
+      "parent": "g-计算机体系结构",
+      "collapsed": false,
+      "pinned": null,
+      "color": null
+    },
+    "g-计算机体系结构--03-ISA": {
+      "name": "03-ISA",
+      "x": 2088.0,
+      "y": 524.0,
+      "w": 408.0,
+      "h": 228.0,
+      "parent": "g-计算机体系结构",
+      "collapsed": false,
+      "pinned": null,
+      "color": null
+    },
+    "g-计算机体系结构--04-汇编语言": {
+      "name": "04-汇编语言",
+      "x": 24.0,
+      "y": 1132.0,
+      "w": 408.0,
+      "h": 228.0,
+      "parent": "g-计算机体系结构",
+      "collapsed": false,
+      "pinned": null,
+      "color": null
+    },
+    "g-计算机体系结构--05-程序内存模型": {
+      "name": "05-程序内存模型",
+      "x": 512.0,
+      "y": 1132.0,
+      "w": 608.0,
+      "h": 328.0,
+      "parent": "g-计算机体系结构",
+      "collapsed": false,
+      "pinned": null,
+      "color": null
+    },
+    "g-计算机体系结构--06-编译原理": {
+      "name": "06-编译原理",
+      "x": 1200.0,
+      "y": 1132.0,
+      "w": 808.0,
+      "h": 428.0,
+      "parent": "g-计算机体系结构",
+      "collapsed": false,
+      "pinned": null,
+      "color": null
+    },
+    "g-计算机体系结构--07-高级语言": {
+      "name": "07-高级语言",
+      "x": 2088.0,
+      "y": 1132.0,
+      "w": 408.0,
+      "h": 128.0,
+      "parent": "g-计算机体系结构",
+      "collapsed": false,
+      "pinned": null,
+      "color": null
+    }
+  },
+  "nodes": {
+    "Agent事件日志": {
+      "x": 48.0,
+      "y": 88.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "任务取消语义": {
+      "x": 248.0,
+      "y": 88.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "任务暂停与恢复": {
+      "x": 448.0,
+      "y": 88.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "取消检查点": {
+      "x": 48.0,
+      "y": 188.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "外部副作用与幂等键": {
+      "x": 248.0,
+      "y": 188.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "崩溃恢复": {
+      "x": 448.0,
+      "y": 188.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "长程Agent最小架构": {
+      "x": 48.0,
+      "y": 288.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "长程任务生命周期": {
+      "x": 248.0,
+      "y": 288.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "harness": {
+      "x": 736.0,
+      "y": 88.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent--_stubs",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "乐观锁": {
+      "x": 936.0,
+      "y": 88.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-AI-Agent--_stubs",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "计算机体系结构": {
+      "x": 48.0,
+      "y": 568.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "二进制与香农定理": {
+      "x": 484.0,
+      "y": 544.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--01-理论基础",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "冯诺依曼体系": {
+      "x": 684.0,
+      "y": 544.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--01-理论基础",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "哈佛架构": {
+      "x": 884.0,
+      "y": 544.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--01-理论基础",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "图灵机": {
+      "x": 484.0,
+      "y": 644.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--01-理论基础",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "数字逻辑": {
+      "x": 680.0,
+      "y": 660.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--01-理论基础",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "数论": {
+      "x": 884.0,
+      "y": 644.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--01-理论基础",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "物理-电学": {
+      "x": 484.0,
+      "y": 744.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--01-理论基础",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "CPU": {
+      "x": 1020.0,
+      "y": 464.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "EPROM": {
+      "x": 1224.0,
+      "y": 468.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "IO接口": {
+      "x": 1424.0,
+      "y": 468.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "Intel平台": {
+      "x": 1624.0,
+      "y": 468.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "Intel手册": {
+      "x": 1824.0,
+      "y": 468.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "RAM": {
+      "x": 1024.0,
+      "y": 568.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "ROM": {
+      "x": 1224.0,
+      "y": 568.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "专用寄存器": {
+      "x": 1424.0,
+      "y": 568.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "内存": {
+      "x": 1624.0,
+      "y": 568.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "内存地址": {
+      "x": 1824.0,
+      "y": 568.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "存储器层次结构": {
+      "x": 1024.0,
+      "y": 668.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "寄存器": {
+      "x": 1224.0,
+      "y": 668.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "总线": {
+      "x": 1424.0,
+      "y": 668.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "控制器": {
+      "x": 1624.0,
+      "y": 668.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "硬盘": {
+      "x": 1824.0,
+      "y": 668.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "计算机硬件": {
+      "x": 1024.0,
+      "y": 768.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "计算机组成原理": {
+      "x": 1224.0,
+      "y": 768.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "输入输出": {
+      "x": 1424.0,
+      "y": 768.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "运算器": {
+      "x": 1624.0,
+      "y": 768.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "通用寄存器": {
+      "x": 1824.0,
+      "y": 768.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "高速缓存": {
+      "x": 1024.0,
+      "y": 868.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--02-计算机硬件",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "CISC": {
+      "x": 2112.0,
+      "y": 568.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--03-ISA",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "ISA": {
+      "x": 2312.0,
+      "y": 568.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--03-ISA",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "RISC": {
+      "x": 2112.0,
+      "y": 668.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--03-ISA",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "现代Intel微架构": {
+      "x": 2312.0,
+      "y": 668.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--03-ISA",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "汇编到机器码执行过程": {
+      "x": 48.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--04-汇编语言",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "汇编器": {
+      "x": 248.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--04-汇编语言",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "汇编指令": {
+      "x": 48.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--04-汇编语言",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "汇编语言": {
+      "x": 248.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--04-汇编语言",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "CPU实模式与平坦模式": {
+      "x": 536.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--05-程序内存模型",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "代码段": {
+      "x": 736.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--05-程序内存模型",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "堆内存": {
+      "x": 936.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--05-程序内存模型",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "数据段": {
+      "x": 536.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--05-程序内存模型",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "栈内存": {
+      "x": 736.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--05-程序内存模型",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "栈帧": {
+      "x": 936.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--05-程序内存模型",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "程序": {
+      "x": 536.0,
+      "y": 1376.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--05-程序内存模型",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "程序的内存布局": {
+      "x": 736.0,
+      "y": 1376.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--05-程序内存模型",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "Clang": {
+      "x": 1224.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "GCC": {
+      "x": 1424.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "GraalVM": {
+      "x": 1624.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "IR": {
+      "x": 1824.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "JIT": {
+      "x": 1224.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "JVM": {
+      "x": 1424.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "LLVM": {
+      "x": 1624.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "OS": {
+      "x": 1824.0,
+      "y": 1276.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "eBPF": {
+      "x": 1224.0,
+      "y": 1376.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "字节码": {
+      "x": 1424.0,
+      "y": 1376.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "编译原理": {
+      "x": 1624.0,
+      "y": 1376.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "编译器": {
+      "x": 1824.0,
+      "y": 1376.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "编译器前端": {
+      "x": 1224.0,
+      "y": 1476.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "编译器后端": {
+      "x": 1424.0,
+      "y": 1476.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "解释器": {
+      "x": 1624.0,
+      "y": 1476.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--06-编译原理",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "C语言": {
+      "x": 2112.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--07-高级语言",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    },
+    "JVM语言": {
+      "x": 2312.0,
+      "y": 1176.0,
+      "w": 160.0,
+      "h": 60.0,
+      "group": "g-计算机体系结构--07-高级语言",
+      "state": "final",
+      "placedAt": null,
+      "anchor": null
+    }
+  },
+  "refs": [],
+  "notes": [],
+  "images": [],
+  "edges": {}
+}

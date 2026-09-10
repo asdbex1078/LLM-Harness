@@ -4,6 +4,8 @@ CLI（knowrary.py）与后续的本地服务（FastAPI）都只依赖这里，�
 """
 from .diagnostics import Diagnostic, Diagnostics
 from .index import INDEX_SCHEMA_VERSION, IndexResult, build_index, content_hash, index_path, load_previous
+from .layout import (LAYOUT_SCHEMA_VERSION, build_initial_layout, empty_layout, find_orphans,
+                     layout_path, stamp)
 from .mdio import (NODE_DIRS, RE_LINK, RE_REL_HEADER, dump_frontmatter, first_paragraph, json_safe,
                    load_json, read, split_frontmatter, strip_md, walk_md, write, write_json_atomic,
                    yaml_scalar)
@@ -12,7 +14,8 @@ from .relations import Edge, NormalizedEdge, RelationTypes, load_relation_types,
 from .schema import validate_index
 
 __all__ = [
-    "Diagnostic", "Diagnostics", "Edge", "INDEX_SCHEMA_VERSION", "IndexResult", "NODE_DIRS", "Node",
+    "Diagnostic", "Diagnostics", "Edge", "INDEX_SCHEMA_VERSION", "LAYOUT_SCHEMA_VERSION",
+    "build_initial_layout", "empty_layout", "find_orphans", "layout_path", "stamp", "IndexResult", "NODE_DIRS", "Node",
     "NormalizedEdge", "RE_LINK", "RE_REL_HEADER", "RelationTypes", "build_index", "content_hash",
     "dump_frontmatter", "first_paragraph", "index_path", "json_safe", "load_json", "load_node",
     "load_previous", "load_relation_types", "load_vault", "normalize_direction", "parse_relations", "read",

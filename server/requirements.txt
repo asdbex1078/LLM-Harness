@@ -1,0 +1,6 @@
+# 本地服务运行期依赖（装在项目内 .venv，仓库不提交虚拟环境）
+#   python3 -m venv .venv && .venv/bin/pip install -r server/requirements.txt
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+watchfiles>=0.24     # 阶段 3 的文件监听（Obsidian 与本系统并发编辑）

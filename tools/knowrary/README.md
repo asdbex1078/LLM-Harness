@@ -19,6 +19,11 @@ python3 $KG index --vault /Users/moka/IdeaProjects/Knowrary
 #    契约：schema_version / revision / generated_at / content_hash / nodes / edges / families / stubs / stats / errors / warnings
 #    边只存归一化正向边（互逆归 canonical、对称按 id 定向），反链在节点的 in / out 邻接表里
 
+# 2a. 布局（阶段 2）：初始布局生成 / 引用校验（零依赖，不需要 .venv）
+python3 $KG layout init  --vault /Users/moka/IdeaProjects/Knowrary [--force]   # 按 field / nodes 子目录两级分组 + 组内网格
+python3 $KG layout check --vault /Users/moka/IdeaProjects/Knowrary            # 孤立记录、Inbox 统计
+#    服务启动时若无 layout.json 会自动生成同样的初始布局
+
 # 2b. 校验（错误退出码 1）——与 index 共用同一套解析和诊断，额外查密钥泄露与索引契约
 python3 $KG check /Users/moka/IdeaProjects/Knowrary
 
@@ -47,7 +52,7 @@ python3 $KG llm test --vault <vault> [--llm x]  # 连通性测试；退出码非
 | 文件 | 作用 |
 | --- | --- |
 | `knowrary.py` | 全部命令（CLI 薄壳，解析与校验都调 `core/`） |
-| `core/` | 核心库：`mdio.py`（IO / frontmatter / 目录扫描）、`relations.py`（类型表、关系解析、方向归一）、`parser.py`（节点与 frontmatter 校验）、`index.py`（index.json 生成、内容哈希与 revision）、`schema.py`（index 契约校验）、`diagnostics.py`（结构化诊断）。后续 FastAPI 服务直接 import，避免两套解析漂移 |
+| `core/` | 核心库：`mdio.py`（IO / frontmatter / 目录扫描）、`relations.py`（类型表、关系解析、方向归一）、`parser.py`（节点与 frontmatter 校验）、`index.py`（index.json 生成、内容哈希与 revision）、`layout.py`（初始布局生成、孤立引用判定）、`schema.py`（index 契约校验）、`diagnostics.py`（结构化诊断）。`server/` 直接 import，避免两套实现漂移 |
 | `tests/run.py` | 零依赖自测（24 个用例）|
 | `llm_backend.py` | LLM 后端：读配置、按角色选 provider、claude-cli / anthropic / openai 三种调用（零依赖，urllib） |
 | `relation-types.v2.json` | 第二版类型表（5 族），迁移时复制到 `<vault>/relation-types.json` |

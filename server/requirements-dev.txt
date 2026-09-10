@@ -1,0 +1,3 @@
+-r requirements.txt
+httpx2>=0.28          # TestClient 依赖
+pyflakes>=3.2

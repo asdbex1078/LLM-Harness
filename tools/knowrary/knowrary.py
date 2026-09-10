@@ -27,9 +27,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import llm_backend  # 同目录模块
-from core import (Diagnostics, Edge, Node, RelationTypes, build_index, dump_frontmatter,
-                  first_paragraph, index_path, load_json, load_previous, load_relation_types,
-                  load_vault, read, validate_index, write, write_json_atomic)
+from core import (Diagnostics, Edge, Node, RelationTypes, build_index, build_initial_layout,
+                  dump_frontmatter, find_orphans, first_paragraph, index_path, layout_path,
+                  load_json, load_previous, load_relation_types, load_vault, read, stamp,
+                  validate_index, write, write_json_atomic)
 from core.mdio import RE_ID_OK, RE_LINK
 
 HERE = Path(__file__).resolve().parent
@@ -269,6 +270,33 @@ def cmd_index(args: argparse.Namespace) -> None:
     for prob in problems:
         print("  \u2717 索引契约：", prob)
     sys.exit(1 if problems or (args.strict and errors) else 0)
+
+
+def cmd_layout(args: argparse.Namespace) -> None:
+    """layout init：按 field / 子目录生成初始布局；layout check：校验引用列出孤立记录。"""
+    vault = Path(args.vault).resolve()
+    path = layout_path(vault)
+    index = build_index(vault, load_previous(index_path(vault))).data
+    if args.action == "init":
+        if path.exists() and not args.force:
+            raise SystemExit(f"{path.relative_to(vault)} 已存在（加 --force 重新生成，会丢弃现有位置）")
+        doc = stamp(build_initial_layout(index))
+        write_json_atomic(path, doc)
+        print(f"已生成 {path.relative_to(vault)}：分组 {len(doc['groups'])}，节点 {len(doc['nodes'])}，"
+              f"revision {doc['revision']}")
+        return
+    if not path.exists():
+        raise SystemExit(f"{path.relative_to(vault)} 不存在，先跑 `layout init` 或启动服务")
+    doc = load_json(path)
+    orphans = find_orphans(doc, index, vault)
+    inbox = sorted({n["id"] for n in index["nodes"] if not n.get("virtual")} - set(doc.get("nodes", {})))
+    print(f"revision {doc.get('revision')}，分组 {len(doc.get('groups', {}))}，"
+          f"已放置节点 {len(doc.get('nodes', {}))}，Inbox {len(inbox)}，孤立记录 {len(orphans)}")
+    for o in orphans[: args.max_warn]:
+        print(f"  ⚠ [{o['kind']}] {o['id']}：{o['reason']}")
+    for nid in inbox[:10]:
+        print(f"  · Inbox：{nid}")
+    sys.exit(0)
 
 
 def cmd_check(args: argparse.Namespace) -> None:
@@ -528,6 +556,13 @@ def add_data_parsers(sub: argparse._SubParsersAction) -> None:
     i.add_argument("--strict", action="store_true", help="有 error 时退出码 1")
     i.add_argument("--max-warn", type=int, default=20)
     i.set_defaults(fn=cmd_index)
+
+    y = sub.add_parser("layout", help="初始布局生成 / 引用校验")
+    y.add_argument("action", choices=["init", "check"], nargs="?", default="check")
+    y.add_argument("--vault", required=True)
+    y.add_argument("--force", action="store_true", help="init 时覆盖已有 layout.json")
+    y.add_argument("--max-warn", type=int, default=20)
+    y.set_defaults(fn=cmd_layout)
 
     c = sub.add_parser("check", help="按规范校验 vault")
     c.add_argument("vault")

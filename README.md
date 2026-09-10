@@ -25,9 +25,11 @@ python3 tools/knowrary/knowrary.py llm test --vault .      # 连通性测试（�
 | `nodes/` | 认知图谱的知识节点，一个知识点一个 md，按领域分子目录（`01-理论基础` … `AI-Agent`，`_stubs` 是待补的空壳） |
 | `fields/` | 领域总览（每个顶层领域一个文件） |
 | `assets/` | 节点引用的图片 |
-| `.knowrary/` | 图谱的机器数据：`llm.example.json`（LLM 配置模板，本地副本 `llm.local.json` 不入库）、`index.json`（解析索引，`knowrary index` 生成，不入库）、`layout.json`（布局，待建）、`review-log.json`（复习记录，待建）、`imports/`（每次导入的方案）、`MIGRATION-REPORT.md` |
+| `.knowrary/` | 图谱的机器数据：`llm.example.json`（LLM 配置模板，本地副本 `llm.local.json` 不入库）、`index.json`（解析索引，`knowrary index` 生成，不入库）、`layout.json`（结构视图的位置 / 分组 / 折叠状态）、`review-log.json`（复习记录，待建）、`imports/`（每次导入的方案）、`MIGRATION-REPORT.md` |
 | `relation-types.json` | 关系类型表：5 个族，具体类型可增长 |
-| `tools/knowrary/` | 迁移 / 导入 / 校验脚本，见其 README |
+| `tools/knowrary/` | CLI 与核心库（解析、索引、布局生成），见其 README |
+| `server/` | 本地服务（FastAPI）：只读 index、读写 layout、托管前端产物，见其 README |
+| `web/` | 结构视图前端（Vue 3 + Vite + X6）；`web/dist/` 是入库的构建产物，运行期零 Node |
 | `.claude/skills/knowrary-import/` | Claude Code skill：把文章拆成节点存进 Knowrary |
 | `doc/` | 规范文档、设计文档、开发实施计划 |
 | `harness/`、`llm/` | 学习笔记原文（不是图谱节点，导入图谱靠 knowrary-import） |
@@ -41,9 +43,16 @@ python3 tools/knowrary/knowrary.py llm test --vault .      # 连通性测试（�
 ## 常用命令
 
 ```bash
+./server/dev.sh                                                # 启动本地服务，打开 http://127.0.0.1:8765/ 看结构视图
+#   画布操作：拖空白平移 / 滚轮缩放 / shift+拖空白框选 / 拖节点进别的分组框即改归属（自动保存）
+#   连线：结构族默认不画（嵌套已表达，工具条可勾开）；跨分组边聚合成「分组→分组 (n)」一束，点开看明细；悬停节点高亮它的边
 python3 tools/knowrary/knowrary.py index --vault .             # 重建 .knowrary/index.json（结构视图/服务的数据源）
+python3 tools/knowrary/knowrary.py layout check --vault .      # 布局引用校验：孤立记录 / Inbox 统计
 python3 tools/knowrary/knowrary.py check .                     # 按规范校验全部节点（含密钥泄露检查）
-python3 tools/knowrary/tests/run.py                            # core 自测（零依赖，24 个用例）
+python3 tools/knowrary/tests/run.py                            # core 自测（零依赖，25 个用例）
+.venv/bin/python server/tests/run.py                           # 服务层自测（16 个用例）
+.venv/bin/python web/tests/e2e_canvas.py                       # 画布端到端自测（真无头 Chrome 拖拽 → 落盘，临时 vault，不碰你的布局）
+cd web && npm run dev                                          # 改前端（5173，/api 代理到 8765）；改完 npm run build 提交 dist
 python3 tools/knowrary/knowrary.py article <文章.md> --vault . --field <领域> [--dry-run] [--llm <provider>]   # 无人值守：文章 → 节点
 # 在 Claude Code 里：/knowrary-import <文章路径>  或  "把这篇文章融入我的图谱"
 ```
