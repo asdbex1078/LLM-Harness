@@ -1,0 +1,255 @@
+{
+  "nodes": [
+    {
+      "id": "长程任务生命周期",
+      "name": "长程任务生命周期",
+      "type": "机制",
+      "year": null,
+      "desc": "长程 Agent 任务的持久化状态机：CREATED → RUNNING → 终态，加 CANCELLING/PAUSING 中间态，用版本号做原子转换",
+      "tags": [
+        "Agent",
+        "Harness",
+        "状态机"
+      ],
+      "aliases": [
+        "任务状态模型"
+      ],
+      "body": "## 描述\n\n长程任务同时包含模型推理、工具执行和外部副作用三类工作。“终止任务”不是设置一个布尔变量，而是一个带持久化状态、取消协议和收尾流程的生命周期管理问题。任务状态必须持久化，而不是只保存在 Worker 内存中。\n\n## 核心内容\n\n```text\nCREATED -> RUNNING -> SUCCEEDED\n                   -> FAILED\n                   -> TIMED_OUT\n                   -> CANCELLING -> CANCELLED\n                   -> PAUSING -> PAUSED -> RESUMING -> RUNNING\n```\n\n状态转换必须由服务端原子更新，并记录 `version` 或等价的乐观锁字段（见 [[乐观锁]]），避免“取消请求”和“任务完成回写”同时到达时互相覆盖。\n\n每个任务至少保存：\n\n- `task_id`、`status`、`version`\n- 当前阶段和下一步动作\n- 已完成的工具调用及其结果引用\n- 仍在执行的请求 ID\n- 取消原因、操作者和时间\n- 最近一次心跳和最后更新时间\n\n用户点击“停止”时，系统要分别回答三个问题：还允许 Agent 做下一步决策吗？当前请求能否被取消？已发出的外部操作如何确认、重试或补偿？这三个问题分别对应 [[取消检查点]]、[[任务取消语义]] 和 [[外部副作用与幂等键]]。",
+      "relations": [
+        {
+          "type": "依赖",
+          "target": "乐观锁",
+          "note": "状态转换用版本号做原子更新"
+        },
+        {
+          "type": "属于",
+          "target": "长程Agent最小架构",
+          "note": "由 Task Store 承载"
+        }
+      ]
+    },
+    {
+      "id": "任务取消语义",
+      "name": "任务取消语义",
+      "type": "机制",
+      "year": null,
+      "desc": "取消分三种来源：用户主动取消、新指令抢占、超时终止；都要先原子转 CANCELLING，再走同一套收尾流程",
+      "tags": [
+        "Agent",
+        "Harness"
+      ],
+      "aliases": [
+        "取消协议"
+      ],
+      "body": "## 描述\n\n取消不是一个动作而是一段协议：服务端先把任务从 `RUNNING` 原子更新为 `CANCELLING`，再向 Worker 发送取消信号；Worker 收尾完成后才转为 `CANCELLED`。如果当前操作不可取消，不能伪造“已取消”，应停留在 `CANCELLING` 直到收到明确结果、超时或进入人工处理队列。\n\n## 核心内容\n\n### 用户主动取消\n\nWorker 收到信号后：\n\n1. 不再发起新的 LLM 请求；\n2. 不再启动新的工具调用；\n3. 尝试取消当前可取消的请求；\n4. 等待已发出的外部操作进入可确认状态；\n5. 写入最终结果并转为 `CANCELLED`。\n\n### 新指令抢占\n\n新指令不等于取消旧任务。先判断新指令是继续、修改、取消并新建，还是与当前任务无关；只有明确产生抢占关系时才取消旧任务。新任务应携带 `parent_task_id` 或 `supersedes_task_id`，保证审计链完整。\n\n### 超时终止\n\n超时至少分三种：单次 LLM 请求超时、单次工具调用超时、整个任务超过截止时间。局部超时可以重试或跳过；任务级超时进入 `CANCELLING`，执行与用户取消相同的收尾流程。重试必须使用幂等键（见 [[外部副作用与幂等键]]）。",
+      "relations": [
+        {
+          "type": "依赖",
+          "target": "长程任务生命周期",
+          "note": "取消是状态机上的一条转换路径"
+        },
+        {
+          "type": "依赖",
+          "target": "外部副作用与幂等键",
+          "note": "收尾时要确认已发出的外部操作"
+        },
+        {
+          "type": "对比",
+          "target": "任务暂停与恢复",
+          "note": "终止=不再推进；暂停=仍有效只是不继续"
+        }
+      ]
+    },
+    {
+      "id": "取消检查点",
+      "name": "取消检查点",
+      "type": "机制",
+      "year": null,
+      "desc": "Harness 在每一步动作前后读取取消状态；检查点只能阻止下一步，已发出的请求要靠底层服务的取消接口",
+      "tags": [
+        "Agent",
+        "Harness"
+      ],
+      "aliases": [
+        "Cancellation Checkpoint"
+      ],
+      "body": "## 描述\n\n[[harness]] 层应在固定位置检查任务的取消状态。检查点只能阻止“下一步动作”；已经交给底层服务的请求，需要使用该服务提供的取消接口、连接关闭机制或取消 token。两者不能混为一谈。\n\n## 核心内容\n\n```text\n读取任务状态\n  -> 调用 LLM 前\n  -> 选择工具前\n  -> 工具调用前\n  -> 工具返回后\n  -> 写入阶段结果前\n  -> 进入下一轮前\n```\n\n对于流式 LLM 请求，客户端断开连接通常只能表达“不再接收结果”；服务端是否立即停止推理，取决于推理服务的实现，必须以该服务的官方文档和实测结果为准（例如 vLLM 的 stopping generation 是接口能力，不能从 Harness 层统一推断）。",
+      "relations": [
+        {
+          "type": "实现",
+          "target": "任务取消语义",
+          "note": "检查点是 Worker 观察到取消的手段"
+        },
+        {
+          "type": "属于",
+          "target": "harness",
+          "note": "检查点插在 Harness 的 LLM/工具循环里"
+        }
+      ]
+    },
+    {
+      "id": "外部副作用与幂等键",
+      "name": "外部副作用与幂等键",
+      "type": "模式",
+      "year": null,
+      "desc": "工具调用分可安全取消与不可回滚两类；后者必须带幂等键、记录 intent/sent/received 事件、超时先查结果再决定重试",
+      "tags": [
+        "Agent",
+        "分布式"
+      ],
+      "aliases": [
+        "幂等键",
+        "Idempotency Key"
+      ],
+      "body": "## 描述\n\n“Worker 进程结束”不代表外部操作没有发生。工具调用必须按副作用分类处理，否则取消和重试都会产生重复副作用。\n\n## 核心内容\n\n### 可安全取消的操作\n\n本地计算、只读查询、可中止的网络请求。取消后可以直接结束，但仍需记录请求是否已经发出。\n\n### 不可回滚或需要补偿的操作\n\n发送消息、创建订单、修改数据、触发部署。此类操作必须：\n\n- 在请求中携带幂等键；\n- 记录 `intent_created`、`request_sent`、`result_received` 等事件（见 [[Agent事件日志]]）；\n- 超时后先查询结果，再决定是否重试；\n- 必要时进入补偿或人工确认状态。\n\n这一条同时是 [[任务取消语义]] 收尾和 [[崩溃恢复]] 的前提：没有幂等键，就无法回答“外部操作到底发生了没有”。",
+      "relations": [
+        {
+          "type": "依赖",
+          "target": "Agent事件日志",
+          "note": "事件区分“准备发送”和“已真正发出”"
+        },
+        {
+          "type": "属于",
+          "target": "长程Agent最小架构",
+          "note": "对应 Idempotency Layer 与 Operation Log"
+        }
+      ]
+    },
+    {
+      "id": "任务暂停与恢复",
+      "name": "任务暂停与恢复",
+      "type": "机制",
+      "year": null,
+      "desc": "暂停表示任务仍有效只是不继续；恢复要同时恢复业务状态和未完成的外部操作，沙箱快照只解决执行环境",
+      "tags": [
+        "Agent",
+        "Harness"
+      ],
+      "body": "## 描述\n\n暂停表示任务仍然有效，只是暂时不继续执行；终止表示任务不再继续推进。两者在 [[长程任务生命周期]] 上是不同的路径（PAUSING → PAUSED → RESUMING vs CANCELLING → CANCELLED）。\n\n## 核心内容\n\n暂停恢复至少需要保存：\n\n- 当前任务状态和版本；\n- 已完成步骤及产物引用；\n- 下一步动作及其前置条件；\n- 未完成请求和外部操作状态。\n\n沙箱快照（如 Firecracker snapshot）只能解决执行环境恢复问题：文件系统、进程和依赖是否保留。它不能自动替代 Agent 业务状态、任务数据库、对话历史或外部系统状态。恢复长程任务时，必须同时恢复业务状态，并重新确认未完成的外部操作。",
+      "relations": [
+        {
+          "type": "依赖",
+          "target": "长程任务生命周期",
+          "note": "PAUSING/PAUSED/RESUMING 是状态机的一部分"
+        },
+        {
+          "type": "依赖",
+          "target": "外部副作用与幂等键",
+          "note": "恢复时要重新确认未完成的外部操作"
+        }
+      ]
+    },
+    {
+      "id": "崩溃恢复",
+      "name": "崩溃恢复",
+      "type": "机制",
+      "year": null,
+      "desc": "Worker 可能在工具请求发出后、结果写回前崩溃；恢复必须先扫描未决操作，用幂等键查外部结果，状态未知则不自动重复",
+      "tags": [
+        "Agent",
+        "Harness",
+        "分布式"
+      ],
+      "aliases": [
+        "未决操作扫描"
+      ],
+      "body": "## 描述\n\n恢复流程不能简单地从“最后一个成功步骤”继续，而应先扫描未决操作。这和 [[任务暂停与恢复]] 的区别是：暂停是有序保存后停下，崩溃是没有机会保存。\n\n## 核心内容\n\n```text\n读取任务状态\n  -> 查找未完成的工具调用\n  -> 使用幂等键查询外部结果\n  -> 已成功：补写结果\n  -> 未执行：安全重试\n  -> 状态未知：保持待确认，不自动重复副作用\n```\n\n任务状态、事件日志和工具结果应具备可追溯关联，至少能通过 `task_id` 和 `tool_call_id` 还原完整过程。由 Recovery Worker 负责处理超时、崩溃和状态未知的操作。",
+      "relations": [
+        {
+          "type": "依赖",
+          "target": "外部副作用与幂等键",
+          "note": "用幂等键查询外部结果"
+        },
+        {
+          "type": "依赖",
+          "target": "Agent事件日志",
+          "note": "靠 task_id / tool_call_id 还原过程"
+        },
+        {
+          "type": "对比",
+          "target": "任务暂停与恢复",
+          "note": "有序暂停 vs 无预警崩溃"
+        }
+      ]
+    },
+    {
+      "id": "Agent事件日志",
+      "name": "Agent 事件日志",
+      "type": "模式",
+      "year": null,
+      "desc": "追加写入的事件表，服务端统一生成时间，保留请求 ID、幂等键和状态版本，用来区分“准备发送”和“已真正发出”",
+      "tags": [
+        "Agent",
+        "可观测性"
+      ],
+      "aliases": [
+        "Operation Log",
+        "事件溯源"
+      ],
+      "body": "## 描述\n\n事件日志采用追加写入。事件时间由服务端统一生成，并保留请求 ID、幂等键和状态版本，这样才能区分“准备发送”和“请求已真正发出”。\n\n## 核心内容\n\n| 事件 | 含义 |\n|---|---|\n| `task_started` | 任务开始运行 |\n| `cancel_requested` | 收到取消请求 |\n| `llm_request_started` | 发起模型请求 |\n| `tool_request_started` | 开始工具调用 |\n| `external_request_sent` | 外部请求已写出 |\n| `tool_result_received` | 收到工具结果 |\n| `cancel_observed` | Worker 在检查点观察到取消 |\n| `task_cancelled` | 任务完成取消收尾 |\n| `task_recovered` | 任务从持久化状态恢复 |\n\n`cancel_requested` 与 `cancel_observed` 分开记录，正好对应 [[任务取消语义]] 里“服务端标记”和“Worker 在 [[取消检查点]] 看到”两个时刻。",
+      "relations": [
+        {
+          "type": "属于",
+          "target": "长程Agent最小架构",
+          "note": "对应 Operation Log"
+        }
+      ]
+    },
+    {
+      "id": "长程Agent最小架构",
+      "name": "长程 Agent 最小架构",
+      "type": "模式",
+      "year": null,
+      "desc": "六个组件：Task Store、Worker、Cancellation Channel、Operation Log、Recovery Worker、Idempotency Layer",
+      "tags": [
+        "Agent",
+        "Harness",
+        "架构"
+      ],
+      "body": "## 描述\n\n一个可落地的最小架构，把 [[长程任务生命周期]]、[[任务取消语义]]、[[外部副作用与幂等键]]、[[崩溃恢复]] 各自落到一个组件上。\n\n## 核心内容\n\n1. **Task Store**：保存任务状态、版本、阶段和截止时间；\n2. **Worker**：执行 LLM 与工具循环，在 [[取消检查点]] 读取取消状态；\n3. **Cancellation Channel**：通过数据库轮询、消息队列或进程内信号传递取消请求；\n4. **Operation Log**：记录工具调用和外部请求生命周期（[[Agent事件日志]]）；\n5. **Recovery Worker**：处理超时、崩溃和状态未知的操作；\n6. **Idempotency Layer**：防止重试造成重复副作用。\n\n## 验收清单\n\n- 取消后不会再发起新的 LLM 或工具请求；\n- 正在执行的请求有明确的取消结果或待确认状态；\n- 外部副作用具备幂等键和结果查询路径；\n- Worker 崩溃后不会盲目重复执行；\n- 暂停恢复后任务能从明确的下一步继续；\n- 所有关键时间点和状态转换可通过事件日志还原；\n- 厂商特性与通用机制分开，并有官方资料或实测证据支持。\n\n## 参考资料\n\n- [Kubernetes Jobs：终止 Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/#terminating-a-job)：删除工作负载不等同于业务副作用回滚。\n- [Firecracker：Snapshots](https://github.com/firecracker-microvm/firecracker/blob/main/docs/snapshotting/snapshot-support.md)：快照只描述运行环境的保存与恢复。\n- [vLLM：Stopping generation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html)：请求停止是推理服务接口能力。\n- [PostgreSQL：MVCC](https://www.postgresql.org/docs/current/mvcc.html)：持久化状态更新要处理并发与一致性。",
+      "relations": [
+        {
+          "type": "包含",
+          "target": "取消检查点",
+          "note": "Worker 内的检查点"
+        },
+        {
+          "type": "包含",
+          "target": "崩溃恢复",
+          "note": "Recovery Worker"
+        },
+        {
+          "type": "包含",
+          "target": "任务暂停与恢复"
+        },
+        {
+          "type": "包含",
+          "target": "任务取消语义",
+          "note": "Cancellation Channel"
+        },
+        {
+          "type": "依赖",
+          "target": "harness",
+          "note": "Worker 就是 Harness 的 LLM/工具循环"
+        }
+      ]
+    }
+  ],
+  "stubs": [
+    {
+      "id": "harness",
+      "name": "Agent Harness",
+      "desc": "包裹 LLM 与工具调用循环的运行框架层，负责检查点、取消、重试与状态读写",
+      "why": "文章反复以“Harness 层”为主语，是 AI-Agent 领域的根概念之一"
+    },
+    {
+      "id": "乐观锁",
+      "name": "乐观锁",
+      "desc": "用版本号比较代替加锁，写入时版本不匹配则失败重试",
+      "why": "任务状态原子更新依赖它，属于数据库并发控制通识"
+    }
+  ],
+  "merge_into": [],
+  "proposed_types": [],
+  "summary": "这是 AI-Agent 领域的第一批节点，围绕“终止不是布尔变量而是生命周期”展开：状态机 → 取消协议 → 检查点 → 副作用/幂等 → 暂停恢复 → 崩溃恢复 → 事件日志 → 最小架构。最重要的新边是 任务取消语义 依赖 外部副作用与幂等键：取消能否收尾，取决于外部操作能否被确认。与现有计算机体系结构图暂无可靠的跨领域边，未强行连接。"
+}

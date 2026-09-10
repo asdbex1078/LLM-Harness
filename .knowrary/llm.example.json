@@ -1,0 +1,38 @@
+{
+  "_说明": "复制为同目录 llm.local.json 再填写（*.local.json 已被 .gitignore 忽略，不会进仓库）。api_key 可写明文，也可写 env:变量名 引用环境变量。",
+  "providers": {
+    "claude-cli": {
+      "type": "claude-cli",
+      "model": "opus",
+      "_说明": "复用本机 Claude Code 登录，不需要密钥；model 可省略"
+    },
+    "anthropic": {
+      "type": "anthropic",
+      "model": "claude-opus-5",
+      "api_key": "env:ANTHROPIC_API_KEY"
+    },
+    "deepseek": {
+      "type": "openai",
+      "base_url": "https://api.deepseek.com/v1",
+      "model": "deepseek-chat",
+      "api_key": "sk-填这里"
+    },
+    "qwen": {
+      "type": "openai",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "model": "qwen-max",
+      "api_key": "env:DASHSCOPE_API_KEY"
+    },
+    "ollama": {
+      "type": "openai",
+      "base_url": "http://localhost:11434/v1",
+      "model": "qwen3:32b",
+      "api_key": "ollama"
+    }
+  },
+  "roles": {
+    "learn": "claude-cli",
+    "review": "deepseek",
+    "_说明": "learn = 文章拆节点 / 关系抽取；review = 校验、分组判断、去重。故意允许两个角色用不同模型，用第二个模型审第一个的产出。"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "_说明": "第二版关系类型表。渲染与分析只认 family（5 个族）；具体类型可增长。inverse=互逆类型；canonical=解析时归一到的正向类型；symmetric=无方向。未登记类型落 default_family 并产生警告。",
+  "families": ["结构", "依赖", "演化", "对照", "弱关联"],
+  "default_family": "弱关联",
+  "types": {
+    "包含":   { "family": "结构", "inverse": "属于" },
+    "属于":   { "family": "结构", "inverse": "包含", "canonical": "包含" },
+    "部件":   { "family": "结构", "inverse": "属于" },
+    "实例":   { "family": "结构" },
+
+    "依赖":   { "family": "依赖", "inverse": "支撑" },
+    "支撑":   { "family": "依赖", "inverse": "依赖", "canonical": "依赖" },
+    "基于":   { "family": "依赖" },
+    "实现":   { "family": "依赖" },
+    "前提":   { "family": "依赖" },
+    "控制":   { "family": "依赖", "inverse": "被控制" },
+    "被控制": { "family": "依赖", "inverse": "控制", "canonical": "控制" },
+    "产出":   { "family": "依赖", "inverse": "产出自" },
+    "产出自": { "family": "依赖", "inverse": "产出", "canonical": "产出" },
+    "编译目标": { "family": "依赖" },
+    "使用":   { "family": "依赖" },
+
+    "源自":   { "family": "演化", "inverse": "演化为", "canonical": "演化为" },
+    "演化为": { "family": "演化", "inverse": "源自" },
+    "扩展为": { "family": "演化" },
+    "修订":   { "family": "演化" },
+    "被激活": { "family": "演化" },
+
+    "对比":   { "family": "对照", "symmetric": true },
+    "类比":   { "family": "对照", "symmetric": true },
+    "争议":   { "family": "对照", "symmetric": true },
+
+    "影响":   { "family": "弱关联" },
+    "相关":   { "family": "弱关联", "symmetric": true },
+    "参考":   { "family": "弱关联" }
+  }
+}
