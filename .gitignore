@@ -18,3 +18,16 @@ node_modules/
 # Logs & env
 *.log
 .env
+
+# Knowrary：本地 LLM 配置（含密钥），模板是 .knowrary/llm.example.json
+*.local.json
+
+# Obsidian（vault = 仓库根目录）
+.obsidian/workspace*.json
+.obsidian/cache
+
+# Knowrary：写回前快照不进版本库
+.knowrary/backup/
+
+# Knowrary：index.json 是可重建的派生缓存（knowrary index 随时重建）
+.knowrary/index.json
