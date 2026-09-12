@@ -430,6 +430,7 @@ def render_md(p):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-dir", default=str(Path(__file__).resolve().parents[2]))
+    ap.add_argument("--force-github", action="store_true", help="即使当天已抓取过也重新抓取 GitHub")
     args = ap.parse_args()
     root = Path(args.repo_dir).resolve()
     daydir = root / "day-info"
@@ -452,9 +453,17 @@ def main():
     raw = []
     raw += src_arxiv(errors)
     raw += src_hf(errors)
-    raw += src_gh_new(errors, today)
-    raw += src_gh_trending(errors, today)
-    raw += src_releases(errors, state, today)
+    gh_skipped = False
+    if state.get("gh_done") == today.isoformat() and not args.force_github:
+        gh_skipped = True
+    else:
+        before = len(errors)
+        raw += src_gh_new(errors, today)
+        raw += src_gh_trending(errors, today)
+        raw += src_releases(errors, state, today)
+        if len(errors) == before:
+            state["gh_done"] = today.isoformat()
+            state["gh_done_at"] = dt.datetime.now().isoformat(timespec="seconds")
     raw += src_hn(errors)
     raw += src_blogs(errors, today)
     raw += src_labs(errors)
@@ -555,6 +564,8 @@ def main():
     if new_state_text != state_raw:
         state_path.write_text(new_state_text, encoding="utf-8")
 
+    if gh_skipped:
+        print("GitHub 源：当天已成功抓取过，本次跳过（--force-github 可强制重抓，也可省 GitHub API 配额）")
     if raw_counts:
         print("抓取原始：" + "；".join("%s %s" % (k, v) for k, v in sorted(raw_counts.items())))
     if items:
