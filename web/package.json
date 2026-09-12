@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@antv/algorithm": "^0.1.26",
+    "@antv/hierarchy": "^0.7.1",
     "@antv/x6": "^2.18.1",
     "@antv/x6-plugin-selection": "^2.2.2",
     "vue": "^3.5.13"

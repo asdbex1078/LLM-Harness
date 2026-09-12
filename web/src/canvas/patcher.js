@@ -6,11 +6,12 @@ const DELAY = 300
 const VIEWPORT_DELAY = 1000
 
 export function createPatcher({ getRevision, setRevision, onStatus, onConflict }) {
-  let pending = { nodes: {}, groups: {}, viewport: null }
+  let pending = { nodes: {}, groups: {}, viewport: null, lists: {} }
   let timer = null
   let inflight = false
 
   const empty = (p) => !p.viewport && !Object.keys(p.nodes).length && !Object.keys(p.groups).length
+    && !Object.keys(p.lists || {}).length
 
   function schedule(delay) {
     if (timer) clearTimeout(timer)
@@ -29,6 +30,13 @@ export function createPatcher({ getRevision, setRevision, onStatus, onConflict }
     schedule(DELAY)
   }
 
+  /** refs / notes / images 是带 id 的小集合，服务端按整表替换。 */
+  function queueList(name, items) {
+    pending.lists = { ...pending.lists, [name]: items }
+    onStatus?.('dirty')
+    schedule(DELAY)
+  }
+
   function queueViewport(viewport) {
     pending.viewport = viewport
     schedule(VIEWPORT_DELAY)
@@ -39,6 +47,7 @@ export function createPatcher({ getRevision, setRevision, onStatus, onConflict }
       nodes: { ...snapshot.nodes, ...pending.nodes },
       groups: { ...snapshot.groups, ...pending.groups },
       viewport: pending.viewport || snapshot.viewport,
+      lists: { ...snapshot.lists, ...pending.lists },
     }
   }
 
@@ -46,8 +55,9 @@ export function createPatcher({ getRevision, setRevision, onStatus, onConflict }
     if (inflight || empty(pending)) return
     inflight = true
     const snapshot = pending
-    pending = { nodes: {}, groups: {}, viewport: null }
+    pending = { nodes: {}, groups: {}, viewport: null, lists: {} }
     const body = { base_revision: getRevision() }
+    Object.assign(body, snapshot.lists || {})
     if (Object.keys(snapshot.nodes).length) body.nodes = snapshot.nodes
     if (Object.keys(snapshot.groups).length) body.groups = snapshot.groups
     if (snapshot.viewport) body.viewport = snapshot.viewport
@@ -74,5 +84,5 @@ export function createPatcher({ getRevision, setRevision, onStatus, onConflict }
     }
   }
 
-  return { queueNode, queueGroup, queueViewport, flush, pendingCount: () => Object.keys(pending.nodes).length + Object.keys(pending.groups).length }
+  return { queueNode, queueGroup, queueViewport, queueList, flush, pendingCount: () => Object.keys(pending.nodes).length + Object.keys(pending.groups).length }
 }

@@ -46,6 +46,9 @@ python3 tools/knowrary/knowrary.py llm test --vault .      # 连通性测试（�
 ./server/dev.sh                                                # 启动本地服务，打开 http://127.0.0.1:8765/ 看结构视图
 #   画布操作：拖空白平移 / 滚轮缩放 / shift+拖空白框选 / 拖节点进别的分组框即改归属（自动保存）
 #   连线：结构族默认不画（嵌套已表达，工具条可勾开）；跨分组边聚合成「分组→分组 (n)」一束，点开看明细；悬停节点高亮它的边
+#   缩小自动折叠成簇卡片（点卡片放大进该域，Esc 回全景）· 搜索框定位 · ＋便签 · 详情面板「放引用卡」
+#   改关系/改摘要 → 先预览 diff → 确认才写回 md（自动备份到 .knowrary/backup/）
+#   视图切换下拉里有「3D 总览」，或直接开 http://127.0.0.1:8765/3d/
 python3 tools/knowrary/knowrary.py index --vault .             # 重建 .knowrary/index.json（结构视图/服务的数据源）
 python3 tools/knowrary/knowrary.py layout check --vault .      # 布局引用校验：孤立记录 / Inbox 统计
 python3 tools/knowrary/knowrary.py check .                     # 按规范校验全部节点（含密钥泄露检查）

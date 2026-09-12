@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Knowrary · 3D 总览（原型）</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0d1117; color: #e6edf3;
+        font: 13px/1.5 -apple-system, "PingFang SC", system-ui, sans-serif; overflow: hidden; }
+      #bar { position: fixed; z-index: 10; left: 0; right: 0; top: 0; display: flex; gap: 14px;
+        align-items: center; padding: 10px 16px; background: rgba(13, 17, 23, .82);
+        border-bottom: 1px solid #222a33; backdrop-filter: blur(6px); }
+      #bar b { font-weight: 600; }
+      .muted { color: #8b98a5; }
+      a.btn, button { font: inherit; color: #e6edf3; background: #1b222b; border: 1px solid #2b333c;
+        border-radius: 6px; padding: 3px 10px; cursor: pointer; text-decoration: none; }
+      button:hover, a.btn:hover { background: #252e38; }
+      #legend { display: flex; gap: 10px; flex-wrap: wrap; }
+      #legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+      #tip { position: fixed; z-index: 10; left: 16px; bottom: 14px; color: #8b98a5; }
+      #info { position: fixed; z-index: 10; right: 16px; top: 60px; width: 260px; padding: 12px 14px;
+        background: rgba(22, 27, 34, .92); border: 1px solid #2b333c; border-radius: 10px; display: none; }
+      #info h3 { margin: 0 0 6px; font-size: 15px; }
+      #info .d { color: #8b98a5; margin-bottom: 8px; }
+      #info ul { margin: 6px 0 0; padding-left: 18px; }
+      #container { position: absolute; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="bar">
+      <b>Knowrary</b><span class="muted">3D 总览（只读原型）</span>
+      <span class="muted" id="stat">加载中…</span>
+      <span id="legend"></span>
+      <span style="flex:1"></span>
+      <button id="fit">适应视图</button>
+      <button id="spin">开始自转</button>
+      <a class="btn" href="../">← 回 2D 结构视图</a>
+    </div>
+    <div id="info"></div>
+    <div id="container"></div>
+    <div id="tip">左键拖动旋转 · 滚轮缩放 · 悬停看邻居 · 点节点看详情</div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

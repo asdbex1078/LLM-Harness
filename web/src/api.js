@@ -15,6 +15,15 @@ export const fetchIndex = () => request('/api/index')
 export const fetchLayout = () => request('/api/layout')
 export const fetchHealth = () => request('/api/health')
 
+export const fetchNode = (id) => request(`/api/node/${encodeURIComponent(id)}`)
+
+/** Markdown 写回：dry_run=true 只预览，false 才落盘（服务端写前自动备份）。 */
+export const postChanges = (body) => request('/api/changes', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+})
+
 export const patchLayout = (body) => request('/api/layout', {
   method: 'PATCH',
   headers: { 'Content-Type': 'application/json' },

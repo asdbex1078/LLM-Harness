@@ -2,7 +2,10 @@
 // 投影层只放当前应该可见的元素；阶段 5 的 LOD 会在这里按缩放级别裁剪。
 import { Graph } from '@antv/x6'
 import { Selection } from '@antv/x6-plugin-selection'
-import { NODE_H, NODE_W, aggregateAttrs, aggregateLabel, edgeAttrs, nodeAttrs, registerShapes } from './shapes'
+import { clusterSummary, containerOf } from './lod'
+import { CLUSTER_H, CLUSTER_W, FAMILY_STYLE, clusterBox, NODE_H, NODE_W, aggregateAttrs, aggregateLabel, clusterAttrs,
+         edgeAttrs, groupAttrs, nodeAttrs, noteAttrs, paletteFor, refAttrs, registerShapes,
+         sizeFor, tokens } from './shapes'
 
 export const LABEL_ZOOM = 0.8 // 边标签只在放大到这个比例以上才画（性能守则 4）
 
@@ -11,10 +14,12 @@ export function createGraph(container) {
   const graph = new Graph({
     container,
     autoResize: true,
-    async: true, // 异步渲染
+    // 异步渲染关掉：切布局时若上一次 fromJSON 还没渲染完，X6 会丢掉这批 cell（模型里有、DOM 里没有）。
+    // 这个规模（几百到几千）用不上它，virtual 的视口裁剪才是性能大头（设计文档附录 A 压测结论）。
+    async: false,
     virtual: true, // 只渲染视口内元素
-    background: { color: '#f7f8fa' },
-    grid: { visible: true, size: 20, type: 'dot', args: { color: '#e4e7ec', thickness: 1 } },
+    background: { color: tokens().bg },
+    grid: { visible: true, size: 24, type: 'dot', args: { color: tokens().grid, thickness: 1 } },
     panning: { enabled: true, eventTypes: ['leftMouseDown', 'rightMouseDown'] },
     mousewheel: { enabled: true, modifiers: null, minScale: 0.05, maxScale: 3 },
     embedding: {
@@ -49,31 +54,87 @@ function groupDepth(groups, id, seen = new Set()) {
 }
 
 export function buildCells(index, layout, options = {}) {
-  const { families = null, showLabels = false } = options
+  const { families = null, showLabels = false, collapsed = new Set(), zoom = 1 } = options
+  // 折叠后节点"显示成谁"：最外层被折叠的祖先分组，或它自己
+  const visibleOf = (nid) => containerOf(layout, nid, collapsed)
+  const hasCollapsedAncestor = (gid) => {
+    let cur = layout.groups[gid]?.parent
+    const seen = new Set()
+    while (cur && !seen.has(cur)) {
+      if (collapsed.has(cur)) return true
+      seen.add(cur)
+      cur = layout.groups[cur]?.parent
+    }
+    return false
+  }
   const byId = new Map(index.nodes.map((n) => [n.id, n]))
+  // 按"最内层分组"取色：一个簇一个色相。径向布局下没有分组，退回按 field 取色。
+  const leaves = Object.keys(layout.groups)
+    .filter((g) => !Object.values(layout.groups).some((x) => x.parent === g))
+    .sort()
+  const fields = [...new Set(index.nodes.map((n) => n.field).filter(Boolean))].sort().map((f) => `field:${f}`)
+  const colorKeys = [...leaves, ...fields]
+  const colorOf = (gid, field) => paletteFor(gid || (field ? `field:${field}` : null), colorKeys)
   const nodes = []
   for (const [gid, g] of Object.entries(layout.groups)) {
+    if (hasCollapsedAncestor(gid)) continue          // 祖先已折叠，里面的东西都不画
+    const color = colorOf(gid)
+    if (collapsed.has(gid)) {
+      const summary = clusterSummary(layout, index, gid)
+      const box = clusterBox(g, zoom)
+      nodes.push({
+        id: gid, shape: 'kg-cluster',
+        x: g.x + (g.w - box.w) / 2, y: g.y + (g.h - box.h) / 2, width: box.w, height: box.h, zIndex: 12,
+        attrs: clusterAttrs(g.name, summary, color, box),
+        data: { kind: 'cluster', group: gid, count: summary.count },
+      })
+      continue
+    }
     nodes.push({
       id: gid, shape: 'kg-group', x: g.x, y: g.y, width: g.w, height: g.h,
       zIndex: 1 + groupDepth(layout.groups, gid),
-      attrs: { label: { text: g.name }, body: g.color ? { fill: g.color } : {} },
+      attrs: groupAttrs(g.name, color),
       data: { kind: 'group', parent: g.parent || null },
     })
   }
   for (const [nid, n] of Object.entries(layout.nodes)) {
+    if (visibleOf(nid) !== nid) continue              // 被折进某个簇里了
     const meta = byId.get(nid)
+    const size = sizeFor(meta)
     nodes.push({
-      id: nid, shape: 'kg-node', x: n.x, y: n.y, width: n.w || NODE_W, height: n.h || NODE_H,
+      id: nid, shape: 'kg-node', x: n.x, y: n.y,
+      width: meta ? size.w : (n.w || NODE_W), height: meta ? size.h : (n.h || NODE_H),
       zIndex: 10,
-      attrs: meta ? nodeAttrs(meta, n) : orphanAttrs(nid),
+      attrs: meta ? nodeAttrs(meta, n, colorOf(n.group, meta.field)) : orphanAttrs(nid),
       data: { kind: 'node', group: n.group || null, orphan: !meta, field: meta?.field || null },
     })
   }
+  // 便签与引用卡：只存在 layout.json 里，不参与关系与索引
+  for (const note of layout.notes || []) {
+    if (note.group && collapsed.has(note.group)) continue
+    nodes.push({
+      id: `note:${note.id}`, shape: 'kg-note', x: note.x, y: note.y,
+      width: note.w || 190, height: note.h || 74, zIndex: 11,
+      attrs: noteAttrs(note), data: { kind: 'note', raw: note },
+    })
+  }
+  for (const ref of layout.refs || []) {
+    if (ref.group && collapsed.has(ref.group)) continue
+    const meta = byId.get(ref.target)
+    nodes.push({
+      id: `ref:${ref.id}`, shape: 'kg-ref', x: ref.x, y: ref.y,
+      width: ref.w || 170, height: ref.h || 46, zIndex: 11,
+      attrs: refAttrs(meta?.name || ref.target, colorOf(layout.nodes[ref.target]?.group, meta?.field)),
+      data: { kind: 'ref', target: ref.target, raw: ref },
+    })
+  }
+
   const placed = new Set(Object.keys(layout.nodes))
   const visibleEdges = index.edges.filter(
-    (e) => placed.has(e.source) && placed.has(e.target) && (!families || families.has(e.family)),
+    (e) => placed.has(e.source) && placed.has(e.target) && (!families || families.has(e.family))
+      && visibleOf(e.source) !== visibleOf(e.target),   // 两端折进同一簇 → 内部关系，不画
   )
-  const { detail, groups: aggregated } = splitEdges(visibleEdges, layout, options)
+  const { detail, groups: aggregated } = splitEdges(visibleEdges, layout, { ...options, collapsed })
   const seen = new Map() // 同一对节点的第几条边，用来错开平行边
   const edges = []
   for (const e of detail) {
@@ -83,12 +144,14 @@ export function buildCells(index, layout, options = {}) {
     seen.set(key, rank + 1)
     const bend = style?.vertices?.length ? null : parallelBend(layout, e, rank, detail, key)
     const base = edgeAttrs(e.family)
+    // 结构族是层级主干（脑图模式下尤其），用平滑曲线，观感接近脑图工具
+    const curved = FAMILY_STYLE[e.family]?.curved || !!bend
     edges.push({
       id: e.id, source: e.source, target: e.target, zIndex: 5,
       attrs: base,
       vertices: style?.vertices || (bend ? [bend] : []),
       router: style?.router ? { name: style.router } : undefined,
-      connector: bend ? { name: 'smooth' } : undefined,
+      connector: curved ? { name: 'smooth' } : undefined,
       labels: showLabels ? [edgeLabel(e)] : [],
       data: { kind: 'edge', family: e.family, type: e.type, year: e.year ?? null,
               baseWidth: base.line.strokeWidth },
@@ -99,7 +162,7 @@ export function buildCells(index, layout, options = {}) {
     const attrs = aggregateAttrs(items.length)
     edges.push({
       id: `agg:${pair}`, source: from, target: to, zIndex: 4,
-      attrs, labels: [aggregateLabel(items.length)],
+      attrs, labels: showLabels ? [aggregateLabel(items.length)] : [],   // 缩小时不画数字，避免满屏小标签
       data: { kind: 'agg', pair, count: items.length, baseWidth: attrs.line.strokeWidth,
               families: [...new Set(items.map((e) => e.family))] },
     })
@@ -110,15 +173,30 @@ export function buildCells(index, layout, options = {}) {
 // 分流：两端在同一分组（或该组对已展开）的边照常画；跨分组的边按「源分组 → 目标分组」聚合。
 // 聚合后一屏里横穿全图的长斜线从几十条降到十几条，点开某一对分组才看明细。
 function splitEdges(visibleEdges, layout, options) {
-  const { aggregate = true, expanded = new Set() } = options
-  const groupOf = (nid) => layout.nodes[nid]?.group || null
+  const { aggregate = true, expanded = new Set(), collapsed = new Set() } = options
+  const insideCluster = (nid) => containerOf(layout, nid, collapsed) !== nid
+  /**
+   * 聚合边的端点必须是画布上真实存在的 cell：
+   * - 节点被折进簇里 → 用簇 id；
+   * - 否则用它所属分组；分组都没有（顶层裸节点）→ 用它自己。
+   * 早先这里对裸节点返回 null，一旦它和某个折叠簇有边，就会拿 null 当 key，
+   * 后面 `pair.split('->')` 直接抛错（画布自愈能兜住，但折叠就失效了）。
+   */
+  const endpointOf = (nid) => {
+    const container = containerOf(layout, nid, collapsed)
+    if (container !== nid) return container
+    return layout.nodes[nid]?.group || nid
+  }
   const detail = []
   const groups = new Map()
   for (const e of visibleEdges) {
-    const a = groupOf(e.source)
-    const b = groupOf(e.target)
-    const pair = a && b ? `${a}->${b}` : null
-    if (!aggregate || !pair || a === b || expanded.has(pair)) {
+    const a = endpointOf(e.source)
+    const b = endpointOf(e.target)
+    const pair = `${a}->${b}`
+    const bothVisible = a === layout.nodes[e.source]?.group && b === layout.nodes[e.target]?.group
+    const forced = insideCluster(e.source) || insideCluster(e.target)   // 簇一定走聚合
+    if (a === b) continue                                              // 同一个容器内部，不画跨组边
+    if (!forced && (!aggregate || !bothVisible || expanded.has(pair))) {
       detail.push(e)
       continue
     }
@@ -149,9 +227,9 @@ function parallelBend(layout, edge, rank, all, key) {
 
 function orphanAttrs(nid) {
   return {
-    body: { fill: '#fff5f5', stroke: '#d97070', strokeDasharray: '4 3' },
-    title: { text: nid },
-    desc: { text: '索引里没有这个节点' },
+    body: { fill: '#fff6f6', stroke: '#d98a8a', strokeDasharray: '5 3', rx: 10, ry: 10 },
+    title: { text: nid, fill: '#a34747', fontSize: 13 },
+    desc: { text: '索引里没有这个节点', fill: '#c08585', fontSize: 10.5 },
   }
 }
 

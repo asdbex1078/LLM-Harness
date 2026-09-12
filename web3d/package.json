@@ -1,0 +1,10 @@
+{
+  "name": "knowrary-3d",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "3D 总览原型：只读 index.json，不参与编辑闭环。不满意可整目录删除。",
+  "scripts": { "dev": "vite", "build": "vite build" },
+  "dependencies": { "@antv/g6": "^5.1.1", "@antv/g6-extension-3d": "^0.1.23" },
+  "devDependencies": { "vite": "^6.0.7" }
+}
