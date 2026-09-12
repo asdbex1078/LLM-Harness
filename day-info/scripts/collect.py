@@ -575,7 +575,7 @@ def main():
         print("本次未发现新增条目")
     print("池内累计 %s 条（必须看 %s / 值得看 %s / 仅存档 %s；critical %s）"
           % (counts["total"], counts["must"], counts["worth"], counts["archive"], counts["critical"]))
-    for it in merged:
+    for it in items:
         if it.get("critical"):
             print("CRITICAL: %s → %s" % (it["title"], it["url"]))
     print("池文件：%s%s" % (pool_json, "（无变化）" if stable else ""))

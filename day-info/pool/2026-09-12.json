@@ -1,17 +1,14 @@
 {
   "date": "2026-09-12",
-  "generated_at": "2026-09-12T18:07:49",
+  "generated_at": "2026-09-12T18:12:12",
   "counts": {
-    "total": 84,
+    "total": 94,
     "must": 5,
-    "worth": 75,
+    "worth": 85,
     "archive": 4,
     "critical": 0
   },
-  "errors": [
-    "GitHub search: HTTP Error 403: rate limit exceeded",
-    "GitHub 热门: HTTP Error 403: rate limit exceeded"
-  ],
+  "errors": [],
   "items": [
     {
       "url": "https://aws.amazon.com/blogs/machine-learning/build-interactive-mcp-apps-using-amazon-bedrock-agentcore/",
@@ -343,6 +340,126 @@
       "source": "GitHub 新项目",
       "published": "2026-09-10",
       "summary": "Wish you could bring the iPhone Duo effect to your MacBook?",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "论文/工具类"
+      ]
+    },
+    {
+      "url": "https://github.com/NousResearch/hermes-agent",
+      "title": "NousResearch/hermes-agent · ⭐244742",
+      "source": "GitHub 热门",
+      "published": "2026-09-12",
+      "summary": "The agent that grows with you",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "论文/工具类"
+      ]
+    },
+    {
+      "url": "https://github.com/Significant-Gravitas/AutoGPT",
+      "title": "Significant-Gravitas/AutoGPT · ⭐187277",
+      "source": "GitHub 热门",
+      "published": "2026-09-12",
+      "summary": "AutoGPT is the vision of accessible AI for everyone, to use and to build on. Our mission is to provide the tools, so that you can focus on what matters.",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "命中:tool"
+      ]
+    },
+    {
+      "url": "https://github.com/affaan-m/ECC",
+      "title": "affaan-m/ECC · ⭐256752",
+      "source": "GitHub 热门",
+      "published": "2026-09-12",
+      "summary": "The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond.",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "论文/工具类"
+      ]
+    },
+    {
+      "url": "https://github.com/f/prompts.chat",
+      "title": "f/prompts.chat · ⭐170062",
+      "source": "GitHub 热门",
+      "published": "2026-09-09",
+      "summary": "f.k.a. Awesome ChatGPT Prompts. Share, discover, and collect prompts from the community. Free and open source — self-host for your organization with complete privacy.",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "命中:open source"
+      ]
+    },
+    {
+      "url": "https://github.com/firecrawl/firecrawl",
+      "title": "firecrawl/firecrawl · ⭐179362",
+      "source": "GitHub 热门",
+      "published": "2026-09-12",
+      "summary": "The context API to search, scrape, and interact with the web at scale. 🔥",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "论文/工具类"
+      ]
+    },
+    {
+      "url": "https://github.com/huggingface/transformers",
+      "title": "huggingface/transformers · ⭐165155",
+      "source": "GitHub 热门",
+      "published": "2026-09-12",
+      "summary": "🤗 Transformers: the model-definition framework for state-of-the-art machine learning models in text, vision, audio, and multimodal models, for both inference and training.",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "命中:framework"
+      ]
+    },
+    {
+      "url": "https://github.com/langchain-ai/langchain",
+      "title": "langchain-ai/langchain · ⭐146180",
+      "source": "GitHub 热门",
+      "published": "2026-09-12",
+      "summary": "The agent engineering platform.",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "论文/工具类"
+      ]
+    },
+    {
+      "url": "https://github.com/langgenius/dify",
+      "title": "langgenius/dify · ⭐155494",
+      "source": "GitHub 热门",
+      "published": "2026-09-12",
+      "summary": "Build Agentic workflows, RAG pipelines, with rich AI model and tool support on one collaborative workspace. Deploy on cloud, VPC, or self-hosted, so teams move from prototype to production without reb",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "命中:tool"
+      ]
+    },
+    {
+      "url": "https://github.com/ollama/ollama",
+      "title": "ollama/ollama · ⭐180718",
+      "source": "GitHub 热门",
+      "published": "2026-09-11",
+      "summary": "Get up and running with Kimi-K2.6, GLM-5.2, MiniMax, DeepSeek, gpt-oss, Qwen, Gemma and other models.",
+      "tier": "值得看",
+      "critical": false,
+      "reasons": [
+        "论文/工具类"
+      ]
+    },
+    {
+      "url": "https://github.com/open-webui/open-webui",
+      "title": "open-webui/open-webui · ⭐151722",
+      "source": "GitHub 热门",
+      "published": "2026-09-10",
+      "summary": "User-friendly AI Interface (Supports Ollama, OpenAI API, ...)",
       "tier": "值得看",
       "critical": false,
       "reasons": [
