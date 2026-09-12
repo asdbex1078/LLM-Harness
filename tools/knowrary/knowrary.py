@@ -306,7 +306,8 @@ def cmd_check(args: argparse.Namespace) -> None:
     s = result.stats
     extra = check_secret_leak(vault) + [f"索引契约：{p}" for p in validate_index(result.data)]
     print(f"节点 {s['nodes']}（stub {s['stubs']}），边 {s['edges']}，"
-          f"错误 {s['errors'] + len(extra)}，警告 {s['warnings']}")
+          f"错误 {s['errors'] + len(extra)}，警告 {s['warnings']}"
+          + (f"，方向矛盾（环）{s['cycles']} 处" if s.get("cycles") else ""))
     sys.exit(1 if print_diagnostics(result.diags, extra, args.max_warn) else 0)
 
 

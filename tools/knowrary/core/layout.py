@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Iterable
 
 LAYOUT_SCHEMA_VERSION = 2
-NODE_W, NODE_H = 160.0, 60.0
-CELL_W, CELL_H = NODE_W + 40, NODE_H + 40      # 节点格子（含间距）
+NODE_W, NODE_H = 196.0, 64.0                   # 与前端最大号节点一致，网格才不会叠框
+CELL_W, CELL_H = NODE_W + 44, NODE_H + 36      # 节点格子（含间距）
 PAD_X, PAD_TOP, PAD_BOT = 24.0, 44.0, 24.0     # 分组内边距（顶部留标题位）
 GROUP_GAP, FIELD_GAP = 80.0, 200.0
 MAX_COLS = 6

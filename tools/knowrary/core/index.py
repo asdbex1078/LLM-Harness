@@ -15,6 +15,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
+from .analysis import find_cycles, pagerank
 from .diagnostics import Diagnostics
 from .mdio import RE_LINK, json_safe, load_json
 from .parser import Node, load_vault, validate_frontmatter
@@ -58,7 +59,9 @@ def build_index(vault: Path, previous: dict | None = None) -> IndexResult:
     _resolve_targets(ctx)
     _warn_history_gaps(ctx)
     _warn_dead_body_links(ctx)
-    return _finalize(_assemble(ctx), diags, previous)
+    payload = _assemble(ctx)
+    _warn_cycles(payload, ctx)
+    return _finalize(payload, diags, previous)
 
 
 def _collect_edges(ctx: BuildContext) -> None:
@@ -143,7 +146,7 @@ def _warn_dead_body_links(ctx: BuildContext) -> None:
 
 
 def _node_payload(vault: Path, node: Node) -> dict:
-    d = {"id": node.id, "path": node.path.relative_to(vault).as_posix()}
+    d = {"id": node.id, "path": node.path.relative_to(vault).as_posix(), "digest": node.digest}
     for k in NODE_FM_FIELDS:
         v = node.fm.get(k)
         if v not in (None, "", []):
@@ -170,9 +173,14 @@ def _assemble(ctx: BuildContext) -> dict:
     for e in edge_list:
         out_map[e["source"]].append(e["id"])
         in_map[e["target"]].append(e["id"])
+    ranks = pagerank([d["id"] for d in payloads], edge_list)
+    top = max(ranks.values(), default=1) or 1
     for d in payloads:
         d["out"], d["in"] = out_map.get(d["id"], []), in_map.get(d["id"], [])
         d["degree"] = len(d["out"]) + len(d["in"])
+        # rank：pageRank 原值（总和 1）；weight：归一到 0~1，前端直接拿来定节点大小
+        d["rank"] = round(ranks.get(d["id"], 0), 6)
+        d["weight"] = round(ranks.get(d["id"], 0) / top, 4)
     return {
         "nodes": payloads,
         "edges": edge_list,
@@ -182,6 +190,22 @@ def _assemble(ctx: BuildContext) -> dict:
         "errors": ctx.diags.sorted_dicts("error"),
         "warnings": ctx.diags.sorted_dicts("warning"),
     }
+
+
+def _warn_cycles(payload: dict, ctx: BuildContext) -> None:
+    """同族短环 = 方向矛盾（A 包含 B 又 B 包含 A），写进警告，`knowrary check` 能直接看到。"""
+    declared = {e["id"]: e.get("declared_in", [""])[0] for e in payload["edges"]}
+    for cycle in find_cycles(payload["edges"]):
+        path = cycle["path"]
+        first = f"{path[0]}->{path[1]}#"
+        file = next((f for eid, f in declared.items() if eid.startswith(first)), "")
+        ctx.diags.warn("relation_cycle",
+                       f"{cycle['family']}族存在环：{' → '.join(path)}（方向矛盾，需要删掉其中一条）",
+                       file=file)
+    payload["errors"] = ctx.diags.sorted_dicts("error")
+    payload["warnings"] = ctx.diags.sorted_dicts("warning")
+    payload["stats"]["warnings"] = len(ctx.diags.warnings)
+    payload["stats"]["cycles"] = len(find_cycles(payload["edges"]))
 
 
 def _families_payload(rt: RelationTypes, edge_list: list[dict]) -> list[dict]:

@@ -252,6 +252,40 @@ def 演化边有年份则不警告():
 # ---------------------------------------------------------------- 用例：revision 与幂等
 
 @case
+def pagerank_权重与骨干一致():
+    """pageRank 按无向图算：连得多、且连的对象也重要的节点权重最高。"""
+    rels = "\n".join(f"- 部件:: [[叶{i}]]" for i in range(6))
+    files = {"nodes/hub.md": node_md("枢纽", rels=rels + "\n- 依赖:: [[次枢纽]]"),
+             "nodes/sub.md": node_md("次枢纽", extra="id: 次枢纽\n", rels="- 部件:: [[叶0]]")}
+    for i in range(6):
+        files[f"nodes/leaf{i}.md"] = node_md(f"叶{i}", extra=f"id: 叶{i}\n")
+    _, r = build(files)
+    ranks = {n["id"]: n["rank"] for n in r.data["nodes"]}
+    assert abs(sum(ranks.values()) - 1) < 1e-4, sum(ranks.values())   # index 里 rank 存的是 6 位小数
+    assert max(ranks, key=ranks.get) == "hub", ranks
+    weights = {n["id"]: n["weight"] for n in r.data["nodes"]}
+    # 叶0 同时连 hub 与次枢纽（对称），权重相等是对的；拿只连一条边的叶1 比才有意义
+    assert weights["hub"] == 1.0 and weights["叶1"] < weights["次枢纽"], weights
+
+
+@case
+def 同族短环被报为方向矛盾():
+    _, r = build({"nodes/a.md": node_md("A", rels="- 包含:: [[b]]"),
+                  "nodes/b.md": node_md("B", rels="- 包含:: [[a]]")})
+    cycles = [d for d in r.diags.warnings if d.code == "relation_cycle"]
+    assert len(cycles) == 1, [d.message for d in r.diags.warnings]
+    assert "结构族存在环" in cycles[0].message and r.stats["cycles"] == 1, cycles[0].message
+
+
+@case
+def 跨族的环不报():
+    """A 包含 B、B 依赖 A 是两种不同关系，不算方向矛盾。"""
+    _, r = build({"nodes/a.md": node_md("A", rels="- 包含:: [[b]]"),
+                  "nodes/b.md": node_md("B", rels="- 依赖:: [[a]]")})
+    assert not [d for d in r.diags.warnings if d.code == "relation_cycle"], [d.message for d in r.diags.warnings]
+
+
+@case
 def 重复生成结果逐字节一致():
     vault, first = build({"nodes/a.md": node_md("A", rels="- 部件:: [[b]]"), "nodes/b.md": node_md("B")})
     out = core.index_path(vault)
@@ -309,6 +343,126 @@ def 契约校验能抓出被改坏的索引():
 
 
 # ---------------------------------------------------------------- 用例：真实 vault
+
+# ---------------------------------------------------------------- 用例：Markdown 写回
+
+RICH_MD = """---
+name: 甲
+field: 测试
+desc: 甲的摘要
+tags:
+  - 标签A
+---
+# 甲
+
+正文第一段，包含 `行内代码` 和 **加粗**。
+
+```python
+# 代码块必须逐字保留
+def f(x):
+    return x * 2
+```
+
+- 列表项 1
+- 列表项 2
+
+## 关系
+- 部件:: [[乙]]
+- 依赖:: [[丙]] (2020) — 说明文字
+
+## 参考资料
+- [某文档](https://example.com)
+
+## 待办
+- [ ] 核实年份
+"""
+
+
+def rich_vault():
+    return build({"nodes/a.md": RICH_MD,
+                  "nodes/b.md": node_md("乙", extra="id: 乙\n"),
+                  "nodes/c.md": node_md("丙", extra="id: 丙\n")})
+
+
+@case
+def 写回只动关系段_其余逐字保留():
+    vault, r = rich_vault()
+    edits = core.plan(vault, [{"type": "add_edge", "source": "a", "relation": "相关", "target": "丙"}], r.data)
+    after = edits[0].after
+    for keep in ("# 代码块必须逐字保留", "def f(x):", "- 列表项 2", "## 参考资料", "- [ ] 核实年份",
+                 "`行内代码`", "**加粗**", "tags:", "  - 标签A"):
+        assert keep in after, f"丢了原文片段：{keep}"
+    assert "- 相关:: [[丙]]" in after, after
+    assert after.count("## 关系") == 1
+    # 关系段之外的字节完全一致
+    cut = lambda t: (t.split("## 关系")[0], t.split("## 参考资料")[1])
+    assert cut(after) == cut(RICH_MD), "关系段以外被改动了"
+
+
+@case
+def 增删改关系():
+    vault, r = rich_vault()
+    changes = [
+        {"type": "add_edge", "source": "a", "relation": "对比", "target": "丙", "note": "新增说明"},
+        {"type": "remove_edge", "source": "a", "relation": "部件", "target": "乙"},
+        {"type": "update_edge", "source": "a", "target": "丙", "from_relation": "依赖",
+         "relation": "基于", "year": 2021},
+    ]
+    edits = core.plan(vault, changes, r.data)
+    after = edits[0].after
+    assert "- 对比:: [[丙]] — 新增说明" in after, after
+    assert "部件:: [[乙]]" not in after, after
+    assert "- 基于:: [[丙]] (2021) — 说明文字" in after, after
+    assert len(edits[0].notes) == 3, edits[0].notes
+
+
+@case
+def frontmatter_白名单():
+    vault, r = rich_vault()
+    edits = core.plan(vault, [{"type": "update_frontmatter", "source": "a",
+                               "fields": {"desc": "换个摘要", "year": 2018}}], r.data)
+    assert "desc: 换个摘要" in edits[0].after and "year: 2018" in edits[0].after
+    for bad in ({"x": 10}, {"id": "别的"}, {"unknown": 1}, {"status": "乱写"}):
+        try:
+            core.plan(vault, [{"type": "update_frontmatter", "source": "a", "fields": bad}], r.data)
+            raise AssertionError(f"{bad} 应该被拒绝")
+        except core.ChangeRejected:
+            pass
+
+
+@case
+def 预览不写盘_确认才写并备份():
+    vault, r = rich_vault()
+    before = (vault / "nodes/a.md").read_text("utf-8")
+    edits = core.plan(vault, [{"type": "add_edge", "source": "a", "relation": "相关", "target": "丙"}], r.data)
+    assert (vault / "nodes/a.md").read_text("utf-8") == before, "预览阶段就写盘了"
+    snapshot = core.commit(vault, edits)
+    assert (vault / "nodes/a.md").read_text("utf-8") != before
+    assert "- 相关:: [[丙]]" in (vault / "nodes/a.md").read_text("utf-8")
+    assert (vault / snapshot / "nodes/a.md").read_text("utf-8") == before, "备份内容不是改动前的原文"
+
+
+@case
+def 外部改过的文件拒绝覆盖():
+    vault, r = rich_vault()
+    (vault / "nodes/a.md").write_text(RICH_MD + "\n外部追加的一行\n", encoding="utf-8")
+    try:
+        core.plan(vault, [{"type": "add_edge", "source": "a", "relation": "相关", "target": "丙"}], r.data)
+        raise AssertionError("外部改过还允许写回")
+    except core.WriteConflict as exc:
+        assert "被改过" in str(exc), str(exc)
+
+
+@case
+def 写回后仍然可解析且索引更新():
+    vault, r = rich_vault()
+    edits = core.plan(vault, [{"type": "add_edge", "source": "a", "relation": "相关", "target": "丙"}], r.data)
+    core.commit(vault, edits)
+    again = core.build_index(vault)
+    assert not core.validate_index(again.data), core.validate_index(again.data)
+    assert any(e["id"] == "a->丙#相关" for e in again.data["edges"]), [e["id"] for e in again.data["edges"]]
+    assert again.data["stats"]["errors"] == 0, again.data["errors"]
+
 
 @case
 def 真实_vault_无错误():

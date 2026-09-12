@@ -9,12 +9,16 @@ from .layout import (LAYOUT_SCHEMA_VERSION, build_initial_layout, empty_layout, 
 from .mdio import (NODE_DIRS, RE_LINK, RE_REL_HEADER, dump_frontmatter, first_paragraph, json_safe,
                    load_json, read, split_frontmatter, strip_md, walk_md, write, write_json_atomic,
                    yaml_scalar)
-from .parser import Node, load_node, load_vault, validate_frontmatter
+from .parser import Node, digest_of, load_node, load_vault, validate_frontmatter
+from .writer import (ChangeRejected, FileEdit, WriteConflict, apply_to_text, backup, commit, plan,
+                     split_sections)
 from .relations import Edge, NormalizedEdge, RelationTypes, load_relation_types, normalize_direction, parse_relations
 from .schema import validate_index
 
 __all__ = [
-    "Diagnostic", "Diagnostics", "Edge", "INDEX_SCHEMA_VERSION", "LAYOUT_SCHEMA_VERSION",
+    "ChangeRejected", "Diagnostic", "Diagnostics", "Edge", "FileEdit", "INDEX_SCHEMA_VERSION",
+    "LAYOUT_SCHEMA_VERSION", "WriteConflict", "apply_to_text", "backup", "commit", "digest_of", "plan",
+    "split_sections",
     "build_initial_layout", "empty_layout", "find_orphans", "layout_path", "stamp", "IndexResult", "NODE_DIRS", "Node",
     "NormalizedEdge", "RE_LINK", "RE_REL_HEADER", "RelationTypes", "build_index", "content_hash",
     "dump_frontmatter", "first_paragraph", "index_path", "json_safe", "load_json", "load_node",

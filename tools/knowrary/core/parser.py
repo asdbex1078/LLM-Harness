@@ -8,9 +8,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import hashlib
+
 from .diagnostics import Diagnostics
 from .mdio import RE_ID_OK, RE_NEXT_H2, RE_REL_HEADER, read, split_frontmatter, walk_md
 from .relations import Edge, parse_relations
+
+def digest_of(text: str) -> str:
+    """文件内容指纹：写回前比对它，Obsidian 改过就拒绝覆盖。"""
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
+
 
 STATUS_VALUES = ("active", "deprecated", "disputed", "stub")
 LAYOUT_KEYS = ("x", "y", "w", "h", "group", "collapsed", "pinned")
@@ -25,6 +32,8 @@ class Node:
     body: str          # 不含 frontmatter、不含 ## 关系 段
     edges: list[Edge] = field(default_factory=list)
     rel_tail: str = "" # 关系段之后的残余文本（一般为空）
+    raw: str = ""      # 文件原文，写回时用来比对"外部有没有改过"
+    digest: str = ""   # 原文的 sha1 前 16 位
 
     @property
     def is_stub(self) -> bool:
@@ -44,7 +53,8 @@ def load_node(vault: Path, p: Path) -> tuple[Node, Diagnostics]:
     parts = RE_REL_HEADER.split(rest, maxsplit=1)
     body = parts[0].rstrip() + "\n"
     section, tail = _cut_relation_section(parts[1]) if len(parts) > 1 else ("", "")
-    node = Node(id=str(fm.get("id") or p.stem), path=p, fm=fm, body=body, rel_tail=tail)
+    node = Node(id=str(fm.get("id") or p.stem), path=p, fm=fm, body=body, rel_tail=tail,
+                raw=text, digest=digest_of(text))
     edges, bad = parse_relations(section, node.id)
     node.edges = edges
     for b in bad:

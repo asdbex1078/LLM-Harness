@@ -12,7 +12,7 @@ TOP_KEYS = {
     "nodes": list, "edges": list, "families": list, "stubs": list,
     "stats": dict, "errors": list, "warnings": list,
 }
-NODE_KEYS = {"id": str, "out": list, "in": list, "degree": int}
+NODE_KEYS = {"id": str, "out": list, "in": list, "degree": int, "rank": float, "weight": float}
 EDGE_KEYS = {"id": str, "source": str, "target": str, "type": str, "family": str, "declared_in": list}
 
 
