@@ -157,6 +157,7 @@ class LayoutSaved(Strict):
     revision: int
     updated_at: str
     orphans: list[dict[str, Any]] = Field(default_factory=list)
+    backup: str | None = None   # 整体重排前的快照路径（vault 相对路径）
 
 
 class LayoutRead(Strict):
@@ -217,6 +218,7 @@ class Change(Strict):
     source: str
     target: str | None = None
     relation: str | None = None
+    from_relation: str | None = None   # update_edge 时用来定位原来那条边
     year: int | None = None
     note: str | None = None
     fields: dict[str, Any] | None = None
@@ -225,6 +227,30 @@ class Change(Strict):
 
 
 class ChangeSet(Strict):
-    base_revision: int
+    base_revision: int                 # 基于哪个 index revision 提出的变更
     changes: list[Change]
-    dry_run: bool = True
+    dry_run: bool = True               # 默认只预览；确认后再发一次 dry_run=false
+
+
+class FileDiff(Strict):
+    path: str
+    notes: list[str] = Field(default_factory=list)
+    diff: str = ""                     # 统一 diff 片段，给人看"改了哪几行"
+
+
+class ChangeResult(Strict):
+    applied: bool
+    files: list[FileDiff] = Field(default_factory=list)
+    backup: str | None = None          # 写回前的原文快照目录
+    index_revision: int = 0
+
+
+class NodeDetail(Strict):
+    id: str
+    path: str
+    raw: str                           # md 原文，逐字返回
+    digest: str
+    meta: dict[str, Any] = Field(default_factory=dict)
+    out: list[dict[str, Any]] = Field(default_factory=list)
+    in_edges: list[dict[str, Any]] = Field(default_factory=list)
+    obsidian_uri: str = ""

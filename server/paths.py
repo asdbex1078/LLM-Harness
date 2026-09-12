@@ -15,6 +15,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 CORE_DIR = REPO / "tools" / "knowrary"
 WEB_DIST = REPO / "web" / "dist"
+WEB3D_DIST = REPO / "web3d" / "dist"   # 3D 总览原型（只读，可整目录删除）
 
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
@@ -31,4 +32,4 @@ def layout_path(vault: Path | None = None) -> Path:
     return (vault or vault_path()) / ".knowrary" / "layout.json"
 
 
-__all__ = ["REPO", "WEB_DIST", "core", "layout_path", "vault_path"]
+__all__ = ["REPO", "WEB3D_DIST", "WEB_DIST", "core", "layout_path", "vault_path"]

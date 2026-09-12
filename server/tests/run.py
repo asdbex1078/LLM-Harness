@@ -269,6 +269,91 @@ def index_随_md_变化而更新():
     assert any(e["id"] == "d->c#依赖" for e in data["edges"])
 
 
+# ---------------------------------------------------------------- 阶段 3：节点详情与写回
+
+@case
+def 节点详情返回原文与出入边():
+    c, _ = client()
+    r = c.get("/api/node/a")
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["raw"].startswith("---") and "## 关系" in data["raw"], data["raw"][:60]
+    assert sorted(e["target"] for e in data["out"]) == ["b", "c"], data["out"]
+    assert data["obsidian_uri"].startswith("obsidian://open?vault="), data["obsidian_uri"]
+    assert c.get("/api/node/不存在").status_code == 404
+
+
+@case
+def 变更预览不写盘():
+    c, vault = client()
+    digest = md_digest(vault)
+    rev = c.get("/api/index").json()["revision"]
+    r = c.post("/api/changes", json={"base_revision": rev, "dry_run": True, "changes": [
+        {"type": "add_edge", "source": "a", "relation": "相关", "target": "c"}]})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["applied"] is False and body["files"][0]["notes"] == ["+ 相关:: [[c]]"], body
+    assert "相关" in body["files"][0]["diff"], body["files"][0]["diff"]
+    assert md_digest(vault) == digest, "预览阶段改了 md"
+
+
+@case
+def 确认后写回并备份():
+    c, vault = client()
+    rev = c.get("/api/index").json()["revision"]
+    r = c.post("/api/changes", json={"base_revision": rev, "dry_run": False, "changes": [
+        {"type": "add_edge", "source": "a", "relation": "相关", "target": "c"},
+        {"type": "update_frontmatter", "source": "c", "fields": {"desc": "新摘要"}}]})
+    assert r.status_code == 200, r.text
+    out = r.json()
+    assert out["applied"] is True and out["backup"], out
+    assert "- 相关:: [[c]]" in (vault / "nodes/组A/a.md").read_text("utf-8")
+    assert "desc: 新摘要" in (vault / "nodes/组B/c.md").read_text("utf-8")
+    assert (vault / out["backup"] / "nodes/组A/a.md").exists(), "备份没生成"
+    index = c.get("/api/index").json()
+    assert any(e["id"] == "a->c#相关" for e in index["edges"]), "索引没更新"
+    assert index["stats"]["errors"] == 0, index["errors"]
+
+
+@case
+def 旧_revision_与外部改动都被拒():
+    c, vault = client()
+    rev = c.get("/api/index").json()["revision"]
+    add = {"type": "add_edge", "source": "a", "relation": "相关", "target": "c"}
+    assert c.post("/api/changes", json={"base_revision": rev, "dry_run": False,
+                                        "changes": [add]}).status_code == 200
+    stale = c.post("/api/changes", json={"base_revision": rev, "dry_run": True, "changes": [add]})
+    assert stale.status_code == 409, f"旧 revision 应被拒，实际 {stale.status_code}"
+    # 模拟 Obsidian 外部改动：索引还没刷新时写回要报冲突
+    fresh = c.get("/api/index").json()["revision"]
+    path = vault / "nodes/组A/a.md"
+    path.write_text(path.read_text("utf-8") + "\n外部追加\n", encoding="utf-8")
+    conflict = c.post("/api/changes", json={"base_revision": fresh, "dry_run": False, "changes": [
+        {"type": "add_edge", "source": "a", "relation": "参考", "target": "b"}]})
+    # 两道防线都会给 409：索引服务发现 md 变了先报 revision 冲突，
+    # 指纹检测是索引没来得及重建时的兜底（core 自测里单独覆盖）
+    assert conflict.status_code == 409, conflict.status_code
+    detail = str(conflict.json()["detail"])
+    assert "被改过" in detail or "索引已更新" in detail, detail
+
+
+@case
+def 非法变更被拒且不写盘():
+    c, vault = client()
+    digest = md_digest(vault)
+    rev = c.get("/api/index").json()["revision"]
+    bad = [
+        ({"type": "update_frontmatter", "source": "a", "fields": {"x": 1}}, "布局字段"),
+        ({"type": "update_frontmatter", "source": "a", "fields": {"id": "别的"}}, "改 id"),
+        ({"type": "remove_edge", "source": "a", "relation": "部件", "target": "不存在"}, "删不存在的边"),
+        ({"type": "add_edge", "source": "不存在的节点", "relation": "相关", "target": "c"}, "源节点不存在"),
+    ]
+    for change, why in bad:
+        r = c.post("/api/changes", json={"base_revision": rev, "dry_run": False, "changes": [change]})
+        assert r.status_code == 422, f"{why} 应被拒绝，实际 {r.status_code}"
+    assert md_digest(vault) == digest, "被拒的变更改了 md"
+
+
 @case
 def health_汇总可用():
     c, _ = client()

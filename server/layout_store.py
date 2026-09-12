@@ -75,17 +75,40 @@ def load_or_init(vault: Path, index: dict) -> tuple[LayoutDoc, bool]:
         return write_layout(vault, initial_layout(index)), True
 
 
-def apply_patch(vault: Path, patch: LayoutPatch, index: dict) -> tuple[LayoutDoc, list[dict[str, Any]]]:
-    """读-校验-合并-写，全程持锁。返回 (新布局, 孤立引用诊断)。"""
+BACKUP_KEEP = 10
+
+
+def is_bulk(patch: LayoutPatch) -> bool:
+    """整体重排（换布局算法）这类大改动：删分组、或一次动 20 个以上节点。"""
+    drops_group = bool(patch.groups) and any(v is None for v in patch.groups.values())
+    many_nodes = bool(patch.nodes) and len(patch.nodes) > 20
+    return drops_group or many_nodes
+
+
+def backup_layout(vault: Path, doc: LayoutDoc) -> str:
+    """把当前 layout 存一份快照再覆盖，只保留最近 BACKUP_KEEP 份。"""
+    stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    path = vault / ".knowrary" / "backup" / f"layout-r{doc.revision}-{stamp}.json"
+    core.write_json_atomic(path, doc.model_dump())
+    old = sorted(path.parent.glob("layout-r*.json"))[:-BACKUP_KEEP]
+    for stale in old:
+        stale.unlink(missing_ok=True)
+    return path.relative_to(vault).as_posix()
+
+
+def apply_patch(vault: Path, patch: LayoutPatch,
+                index: dict) -> tuple[LayoutDoc, list[dict[str, Any]], str | None]:
+    """读-校验-合并-写，全程持锁。返回 (新布局, 孤立引用诊断, 备份路径)。"""
     with _LOCK:
         doc = read_layout(vault)
         if doc is None:
             doc = initial_layout(index)
         if patch.base_revision != doc.revision:
             raise RevisionConflict(doc)
+        backup = backup_layout(vault, doc) if is_bulk(patch) and doc.revision else None
         _merge(doc, patch)
         _assert_group_refs(doc)
-        return write_layout(vault, doc), find_orphans(doc, index, vault)
+        return write_layout(vault, doc), find_orphans(doc, index, vault), backup
 
 
 def _merge(doc: LayoutDoc, patch: LayoutPatch) -> None:
