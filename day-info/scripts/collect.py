@@ -463,7 +463,6 @@ def main():
         raw += src_releases(errors, state, today)
         if len(errors) == before:
             state["gh_done"] = today.isoformat()
-            state["gh_done_at"] = dt.datetime.now().isoformat(timespec="seconds")
     raw += src_hn(errors)
     raw += src_blogs(errors, today)
     raw += src_labs(errors)
