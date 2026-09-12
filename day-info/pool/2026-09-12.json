@@ -1,14 +1,16 @@
 {
   "date": "2026-09-12",
-  "generated_at": "2026-09-12T18:15:09",
+  "generated_at": "2026-09-12T19:01:22",
   "counts": {
-    "total": 94,
+    "total": 95,
     "must": 5,
     "worth": 85,
-    "archive": 4,
+    "archive": 5,
     "critical": 0
   },
-  "errors": [],
+  "errors": [
+    "DeepMind: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol ("
+  ],
   "items": [
     {
       "url": "https://aws.amazon.com/blogs/machine-learning/build-interactive-mcp-apps-using-amazon-bedrock-agentcore/",
@@ -1116,6 +1118,16 @@
       "source": "IT之家",
       "published": "2026-09-12",
       "summary": "IT之家 9 月 12 日消息，据界面新闻报道，9 月 12 日，中科曙光副总裁曹振南在 2026 中国算力大会主论坛上披露， 国家超算互联网注册用户量已突破 170 万，累计完成作业量突破 2.7 亿个，国产算力占比超 95% 。 曹振南介绍，国家超算互联网平台已汇聚 CPU 核心超 350 万、GPU 卡超 25 万，日均作业数突破 30 万个，峰值突破 100 万个。平台应用商城入驻商户超 880 家，下单量超 24 万，覆盖科研",
+      "tier": "仅存档",
+      "critical": false,
+      "reasons": []
+    },
+    {
+      "url": "https://www.ithome.com/1/001/625.htm",
+      "title": "绿联发布 AI NAS iDX6011 Pro：酷睿 Ultra 7 255H、内存 64GB，首发价 15999 元",
+      "source": "IT之家",
+      "published": "2026-09-12",
+      "summary": "IT之家 9 月 12 日消息，绿联今日发布了 AI NAS iDX6011 Pro，日常价 19999 元， 首发到手价 15999 元 。 这款新品搭载英特尔 酷睿 Ultra 7 255H 处理器（16 核心 16 线程），64GB LPDDR5X 8533MT/s 内存，独立系统盘存储为 128GB。 该机配备 2 个 PCIe 4.0×4 M.2 固态硬盘位，单盘上限支持 8TB；支持安装 6 块 2.5/3.5 英寸 SAT",
       "tier": "仅存档",
       "critical": false,
       "reasons": []
