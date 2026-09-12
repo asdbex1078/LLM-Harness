@@ -25,7 +25,7 @@
 - `scripts/collect.py` 收集器（零依赖，可手动跑）
 - `scripts/weekly.py` 周材料合并（周报前处理）
 - `scripts/daily.sh` 每日收集 + 提交（定时任务调用）
-- `scripts/publish.sh` 提交助手（有凭证则推送）
+- `scripts/publish.sh` 提交助手（自动尝试 HTTPS → SSH 双通道推送）
 - `state.json` 去重 / 版本比对状态（45 天去重窗口）
 
 ## 手动使用
@@ -33,22 +33,35 @@
 ```bash
 python3 day-info/scripts/collect.py           # 收集今天的（同日重跑会合并，不重复）
 python3 day-info/scripts/weekly.py            # 合并最近 7 天为周材料
-bash day-info/scripts/daily.sh                # 收集 + 本地提交（+推送，若有凭证）
-bash day-info/scripts/publish.sh "提交信息"    # 只提交（周报写完后调用）
+bash day-info/scripts/daily.sh                # 收集 + 本地提交（+推送，若凭证就绪）
+bash day-info/scripts/publish.sh "提交信息"    # 只提交/推送（周报写完后调用）
 ```
 
 数据来源：arXiv（cs.AI/CL/LG/SE）、HuggingFace（hf-mirror 镜像）、GitHub（新项目搜索 + 热门活跃仓库 + antvis 版本发布）、OpenAI / DeepMind / Anthropic 博客、Hacker News、IT之家、精选技术博客 RSS。
 
-## 推送凭证（一次性配置）
+## 推送凭证（一次性配置，二选一）
 
-推送目标：本仓库 `day-info-for-autoclaw` 分支。凭证放在工作区（不入库、不进仓库）：
+推送目标：本仓库 `day-info-for-autoclaw` 分支。两个通道任选其一即可，`publish.sh` 会自动依次尝试。
 
-- 文件：`/root/.openclaw-autoclaw/workspace/.secrets/git-credentials`
+**通道 A：HTTPS + Personal Access Token（推荐，最简单）**
+
+- 凭证文件：`/root/.openclaw-autoclaw/workspace/.secrets/git-credentials`
 - 内容格式：`https://x-access-token:<TOKEN>@github.com`
-- 需要一枚 GitHub 细粒度 Personal Access Token：仅勾选 `Knowrary` 仓库、权限 `Contents: Read and write`。
+- Token：GitHub 细粒度 PAT，仅勾选 `Knowrary` 仓库、权限 `Contents: Read and write`
 - 也可用环境变量 `KNOWRARY_DAYINFO_CREDS` 指向其他凭证文件路径。
 
-> 未配置凭证时：一切照常收集并本地提交，只是不推送；配置后自动开始推送。
+**通道 B：SSH + Deploy Key（密钥已生成，待添加到仓库）**
+
+- 私钥：`/root/.openclaw-autoclaw/workspace/.secrets/github_deploy_key`
+- 公钥（添加到 https://github.com/asdbex1078/Knowrary/settings/keys ，勾选 Allow write access）：
+
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKzB3vICRYKUQH79Td3U1S26i263ezk/099OQhi9hmpG autoclaw-dayinfo@Knowrary
+```
+
+- `~/.ssh/config` 已把 github.com 指向 `ssh.github.com:443`（本沙箱网络对 22 端口可能受限）。
+
+> 未配置凭证时：一切照常收集并本地提交，只是不推送；配置任一通道后自动开始推送。
 
 ---
 
